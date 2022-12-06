@@ -1,10 +1,16 @@
 import ajv from 'ajv'
-import { pathExists } from 'fs-extra'
+import { pathExists, readFile } from 'fs-extra'
 import { resolve } from 'path'
+import { parse } from 'json5'
 
 const Ajv = new ajv()
 
-export default async <T>(path: string) => {
+export interface LoadedFunc {
+    meta: object
+    func: Function
+}
+
+export default async <T>(path: string): Promise<LoadedFunc> => {
     if (!(await pathExists(path))) {
         throw Error(`no pkg ${path}`)
     }
@@ -14,8 +20,7 @@ export default async <T>(path: string) => {
     if (!(await pathExists(pkg_path))) {
         throw Error(`no pkg meta ${pkg_path}`)
     }
-
-    const pkgmeta = await import(pkg_path)
+    const pkgmeta = parse(await readFile(pkg_path, 'utf8'))
     const pkg_main = resolve(path, pkgmeta.main)
 
     if (!(await pathExists(pkg_main))) {
@@ -28,11 +33,14 @@ export default async <T>(path: string) => {
         throw Error("wrong schema!")
     }
 
-    return async (input: T) => {
-        if (!Ajv.validate(pkgmeta.input, input)) {
-            throw Error("wrong input!")
-        }
+    return {
+        func: async (input: T) => {
+            if (!Ajv.validate(pkgmeta.input, input)) {
+                throw Error("wrong input!")
+            }
 
-        return await func(input)
+            return await func(input)
+        },
+        meta: pkgmeta
     }
 }
