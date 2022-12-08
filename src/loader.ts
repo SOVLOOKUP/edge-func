@@ -6,7 +6,7 @@ import { parse } from 'json5'
 const Ajv = new ajv()
 
 export interface LoadedFunc {
-    meta: object
+    meta: any
     func: Function
 }
 
@@ -20,6 +20,7 @@ export default async <T>(path: string): Promise<LoadedFunc> => {
     if (!(await pathExists(pkg_path))) {
         throw Error(`no pkg meta ${pkg_path}`)
     }
+
     const pkgmeta = parse(await readFile(pkg_path, 'utf8'))
     const pkg_main = resolve(path, pkgmeta.main)
 

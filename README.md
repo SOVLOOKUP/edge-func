@@ -1,5 +1,3 @@
-# EDGE-FUNC - JSRUNTIME
+# EDGEFUNC - JSRUNTIME
 
-## todo
-
-1. [ ] manager 文件测试
+一个云函数运行时的实现

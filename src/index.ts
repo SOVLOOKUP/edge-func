@@ -1,6 +1,7 @@
 import core from './core'
 import { fastify } from 'fastify'
 import manager from './manager'
+import adm from 'adm-zip'
 
 const server = fastify({
     logger: true
@@ -14,9 +15,11 @@ server.delete('/:name', async (request, reply) => {
     reply.send(await manager.remover((request.params as any).name))
 })
 
-server.addContentTypeParser('/', async (request, payload, done) =>
-    await manager.installer(payload, done)
-)
+server.put('/', async (request, reply) => {
+    reply.send(await manager.installer((request.body as adm)))
+})
+
+server.addContentTypeParser("application/zip", { parseAs: 'buffer' }, (r, p, d) => d(null, new adm(p)))
 
 server.post('/:name', async (request, reply) => {
     reply.send(await core.call_func((request.params as any).name, request.body))
